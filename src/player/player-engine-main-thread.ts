@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import * as EventEmitter from 'events';
+import { EventEmitter } from 'events';
 import type PlayerEngine from './player-engine';
 import Log from '../utils/logger';
 import { createDefaultConfig } from '../config';
