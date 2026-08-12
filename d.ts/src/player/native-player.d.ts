@@ -3,7 +3,7 @@ declare class NativePlayer {
     constructor(mediaDataSource: any, config: any);
     TAG: string;
     _type: string;
-    _emitter: any;
+    _emitter: EventEmitter<any>;
     _config: {
         enableWorker: boolean;
         enableWorkerForMSE: boolean;
@@ -71,3 +71,4 @@ declare class NativePlayer {
     _onvLoadedMetadata(e: any): void;
     _reportStatisticsInfo(): void;
 }
+import EventEmitter from 'events';

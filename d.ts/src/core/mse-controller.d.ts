@@ -3,7 +3,7 @@ declare class MSEController {
     constructor(config: any);
     TAG: string;
     _config: any;
-    _emitter: any;
+    _emitter: EventEmitter<any>;
     e: {
         onSourceOpen: any;
         onSourceEnded: any;
@@ -73,3 +73,4 @@ declare class MSEController {
     _onSourceBufferUpdateEnd(): void;
     _onSourceBufferError(e: any): void;
 }
+import EventEmitter from 'events';

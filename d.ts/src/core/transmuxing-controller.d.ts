@@ -2,7 +2,7 @@ export default TransmuxingController;
 declare class TransmuxingController {
     constructor(mediaDataSource: any, config: any);
     TAG: string;
-    _emitter: any;
+    _emitter: EventEmitter<any>;
     _config: any;
     _mediaDataSource: any;
     _currentSegmentIndex: number;
@@ -53,6 +53,7 @@ declare class TransmuxingController {
     _reportSegmentMediaInfo(segmentIndex: any): void;
     _reportStatisticsInfo(): void;
 }
+import EventEmitter from 'events';
 import FLVDemuxer from '../demux/flv-demuxer.js';
 import TSDemuxer from '../demux/ts-demuxer';
 import MP4Remuxer from '../remux/mp4-remuxer.js';
