@@ -117,7 +117,6 @@ class AV1OBUParser {
                     if ((value & 0x80) === 0) { break; }
                 }
             }
-            console.log(type);
 
             if (type === 1) { // OBU_SEQUENCE_HEADER
                 meta = {

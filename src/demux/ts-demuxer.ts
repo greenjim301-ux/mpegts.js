@@ -962,22 +962,15 @@ class TSDemuxer extends BaseDemuxer {
 
             if (details && details.keyframe === true) {
                 if (!this.video_init_segment_dispatched_) {
-                    const av1c = new Uint8Array((new ArrayBuffer(this.video_metadata_.av1c.byteLength + details.sequence_header_data.byteLength)));
-                    av1c.set(this.video_metadata_.av1c, 0);
-                    av1c.set(details.sequence_header_data, this.video_metadata_.av1c.byteLength);
-                    details.av1c = av1c;
-
                     this.video_metadata_.details = details;
                     this.dispatchVideoInitSegment();
                 } else if (this.detectVideoMetadataChange(null, details) === true) {
+                    Log.v(this.TAG, `AV1: Critical av1 metadata has been changed, attempt to re-generate InitSegment`);
                     this.video_metadata_changed_ = true;
                     // flush stashed frames before changing codec metadata
                     this.dispatchVideoMediaSegment();
 
-                    const av1c = new Uint8Array((new ArrayBuffer(this.video_metadata_.av1c.byteLength + details.sequence_header_data.byteLength)));
-                    av1c.set(this.video_metadata_.av1c, 0);
-                    av1c.set(details.sequence_header_data, this.video_metadata_.av1c.byteLength);
-                    details.av1c = av1c;
+                    this.video_metadata_.details = details;
                     // notify new codec metadata (maybe changed)
                     this.dispatchVideoInitSegment();
                 }
@@ -1226,7 +1219,14 @@ class TSDemuxer extends BaseDemuxer {
         meta.codec = details.codec_mimetype;
 
         if (this.video_metadata_.av1c) {
-            meta.av1c = this.video_metadata_.av1c;
+            // AV1CodecConfigurationRecord = AV1_video_descriptor payload + configOBUs (Sequence Header OBU)
+            let config_record = this.video_metadata_.av1c;
+            let sequence_header = details.sequence_header_data;
+            let av1c = new Uint8Array(config_record.byteLength + sequence_header.byteLength);
+            av1c.set(config_record, 0);
+            av1c.set(sequence_header, config_record.byteLength);
+            meta.av1c = av1c;
+
             if (this.video_init_segment_dispatched_ == false) {
                 Log.v(this.TAG, `Generated first AV1 for mimeType: ${meta.codec}`);
             }
