@@ -25,7 +25,7 @@ import MSEController from '../core/mse-controller';
 import Transmuxer from "../core/transmuxer";
 import TransmuxingEvents from '../core/transmuxing-events';
 import PlayerEvents from './player-events';
-import { ErrorTypes } from './player-errors';
+import { ErrorTypes, ErrorDetails } from './player-errors';
 import {
     WorkerCommandPacket,
     WorkerCommandPacketInit,
@@ -319,7 +319,7 @@ const PlayerEngineWorker = (self: DedicatedWorkerGlobalScope) => {
             msg: 'player_event',
             event: PlayerEvents.ERROR,
             error_type: ErrorTypes.MEDIA_ERROR,
-            error_detail: ErrorTypes.MEDIA_MSE_ERROR,
+            error_detail: ErrorDetails.MEDIA_MSE_ERROR,
             info: info,
         } as WorkerMessagePacketPlayerEventError);
     }
