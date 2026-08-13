@@ -7,6 +7,14 @@
         "module": "es6",
         "target": "es5",
         "experimentalDecorators": true,
+        // Migrating to "strict": true one flag at a time. Flags below are already
+        // satisfied by the sources; the remaining ones (noImplicitThis,
+        // noImplicitAny, strictNullChecks, strictPropertyInitialization) are
+        // enabled in later steps and then collapsed into "strict": true.
+        "strictFunctionTypes": true,
+        "strictBindCallApply": true,
+        "useUnknownInCatchVariables": true,
+        "alwaysStrict": true,
         "declaration": true,
         // d.ts/mpegts.d.ts is the hand-written public API surface (the "types" entry
         // in package.json) and is NOT generated. Emit generated declarations into
