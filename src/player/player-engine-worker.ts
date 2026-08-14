@@ -50,7 +50,7 @@ import {
 const PlayerEngineWorker = (self: DedicatedWorkerGlobalScope) => {
     const TAG: string = 'PlayerEngineWorker';
 
-    const logcat_callback: (type: string, str: string) => void = onLogcatCallback.bind(this);
+    const logcat_callback: (type: string, str: string) => void = onLogcatCallback;
 
     let media_data_source: any = null;
     let config: any = null;
@@ -149,10 +149,10 @@ const PlayerEngineWorker = (self: DedicatedWorkerGlobalScope) => {
     function initializeMSE(): void {
         Log.v(TAG, 'Initializing MediaSource in DedicatedWorker');
         mse_controller = new MSEController(config);
-        mse_controller.on(MSEEvents.SOURCE_OPEN, onMSESourceOpen.bind(this));
-        mse_controller.on(MSEEvents.UPDATE_END, onMSEUpdateEnd.bind(this));
-        mse_controller.on(MSEEvents.BUFFER_FULL, onMSEBufferFull.bind(this));
-        mse_controller.on(MSEEvents.ERROR, onMSEError.bind(this));
+        mse_controller.on(MSEEvents.SOURCE_OPEN, onMSESourceOpen);
+        mse_controller.on(MSEEvents.UPDATE_END, onMSEUpdateEnd);
+        mse_controller.on(MSEEvents.BUFFER_FULL, onMSEBufferFull);
+        mse_controller.on(MSEEvents.ERROR, onMSEError);
         mse_controller.initialize({
             getCurrentTime: () => media_element_current_time,
             getReadyState: () => media_element_ready_state,
