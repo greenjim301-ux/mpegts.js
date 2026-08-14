@@ -15,6 +15,7 @@
         "strictBindCallApply": true,
         "useUnknownInCatchVariables": true,
         "alwaysStrict": true,
+        "noImplicitThis": true,
         "declaration": true,
         // d.ts/mpegts.d.ts is the hand-written public API surface (the "types" entry
         // in package.json) and is NOT generated. Emit generated declarations into
