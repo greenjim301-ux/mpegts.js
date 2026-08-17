@@ -506,7 +506,7 @@ class AV1OBUParser {
             let buffer_removal_time_present_flag = gb.readBool();
             if (buffer_removal_time_present_flag) {
                 for (let opNum = 0; opNum <= sequence_header.operating_points_cnt_minus_1; opNum++) {
-                    if (sequence_header.operating_points[opNum].decoder_model_present_for_this_op[opNum]) {
+                    if (sequence_header.operating_points[opNum].decoder_model_present_for_this_op) {
                         let opPtIdc = sequence_header.operating_points[opNum].operating_point_idc;
                         let inTemporalLayer = (opPtIdc >> temporal_id ) & 1
                         let inSpatialLayer = (opPtIdc >> (spatial_id + 8)) & 1
