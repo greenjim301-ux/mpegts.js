@@ -156,8 +156,8 @@ class TSDemuxer extends BaseDemuxer {
     private audio_metadata_changed_ = false;
     private loas_previous_frame: LOASAACFrame | null = null;
 
-    private video_track_ = {type: 'video', id: 1, sequenceNumber: 0, samples: [], length: 0};
-    private audio_track_ = {type: 'audio', id: 2, sequenceNumber: 0, samples: [], length: 0};
+    private video_track_ = {type: 'video', id: 1, sequenceNumber: 0, samples: [] as any[], length: 0};
+    private audio_track_ = {type: 'audio', id: 2, sequenceNumber: 0, samples: [] as any[], length: 0};
 
     public constructor(probe_data: any, config: any) {
         super();
@@ -241,7 +241,7 @@ class TSDemuxer extends BaseDemuxer {
         };
     }
 
-    public bindDataSource(loader) {
+    public bindDataSource(loader: any) {
         loader.onDataArrival = this.parseChunks.bind(this);
         return this;
     }
