@@ -47,6 +47,40 @@ function ReadBig32(array, index) {
             (array[index + 3]));
 }
 
+// ITU-T G.711 A-law / mu-law expansion into 16-bit signed linear PCM
+function BuildG711AlawTable() {
+    let table = new Int16Array(256);
+    for (let i = 0; i < 256; i++) {
+        let val = i ^ 0x55;
+        let mantissa = (val & 0x0F) << 4;
+        let exponent = (val & 0x70) >>> 4;
+        let magnitude = 0;
+        if (exponent === 0) {
+            magnitude = mantissa + 8;
+        } else if (exponent === 1) {
+            magnitude = mantissa + 0x108;
+        } else {
+            magnitude = (mantissa + 0x108) << (exponent - 1);
+        }
+        table[i] = (val & 0x80) ? magnitude : -magnitude;
+    }
+    return table;
+}
+
+function BuildG711UlawTable() {
+    let table = new Int16Array(256);
+    const bias = 0x84;
+    for (let i = 0; i < 256; i++) {
+        let val = (~i) & 0xFF;
+        let magnitude = (((val & 0x0F) << 3) + bias) << ((val & 0x70) >>> 4);
+        table[i] = (val & 0x80) ? (bias - magnitude) : (magnitude - bias);
+    }
+    return table;
+}
+
+const G711AlawTable = BuildG711AlawTable();
+const G711UlawTable = BuildG711UlawTable();
+
 
 class FLVDemuxer {
 
@@ -535,14 +569,18 @@ class FLVDemuxer {
         }
         // Legacy FLV
 
-        if (soundFormat !== 2 && soundFormat !== 3 && soundFormat !== 10) {  // PCM or MP3 or AAC
+        // PCM or MP3 or AAC or G.711 A-law / mu-law
+        if (soundFormat !== 2 && soundFormat !== 3 && soundFormat !== 7 && soundFormat !== 8 && soundFormat !== 10) {
             this._onError(DemuxErrors.CODEC_UNSUPPORTED, 'Flv: Unsupported audio codec idx: ' + soundFormat);
             return;
         }
 
         let soundRate = 0;
         let soundRateIndex = (soundSpec & 12) >>> 2;
-        if (soundRateIndex >= 0 && soundRateIndex <= 4) {
+        if (soundFormat === 7 || soundFormat === 8) {
+            // G.711 in FLV is always 8 kHz, the SoundRate field carries no meaningful value
+            soundRate = 8000;
+        } else if (soundRateIndex >= 0 && soundRateIndex <= 4) {
             soundRate = this._flvSoundRateTable[soundRateIndex];
         } else {
             this._onError(DemuxErrors.FORMAT_ERROR, 'Flv: Invalid audio sample rate idx: ' + soundRateIndex);
@@ -707,7 +745,57 @@ class FLVDemuxer {
             let pcmSample = {unit: data, length: data.byteLength, dts: dts, pts: dts};
             track.samples.push(pcmSample);
             track.length += data.length;
+        } else if (soundFormat === 7 || soundFormat === 8) {  // G.711 A-law / mu-law
+            if (!meta.codec) {
+                meta.audioSampleRate = soundRate;
+                meta.channelCount = (soundType === 0 ? 1 : 2);
+                meta.sampleSize = 16;
+                meta.littleEndian = true;
+                // G.711 is expanded into 16-bit linear PCM, then remuxed as ipcm
+                meta.codec = 'ipcm';
+                meta.originalCodec = (soundFormat === 7 ? 'g711a' : 'g711u');
+
+                this._audioInitialMetadataDispatched = true;
+                this._onTrackMetadata('audio', meta);
+
+                let mi = this._mediaInfo;
+                mi.audioCodec = meta.originalCodec;
+                mi.audioSampleRate = meta.audioSampleRate;
+                mi.audioChannelCount = meta.channelCount;
+                mi.audioDataRate = 8 * meta.audioSampleRate * meta.channelCount;
+                if (mi.hasVideo) {
+                    if (mi.videoCodec != null) {
+                        mi.mimeType = 'video/x-flv; codecs="' + mi.videoCodec + ',' + mi.audioCodec + '"';
+                    }
+                } else {
+                    mi.mimeType = 'video/x-flv; codecs="' + mi.audioCodec + '"';
+                }
+                if (mi.isComplete()) {
+                    this._onMediaInfo(mi);
+                }
+            }
+
+            let data = this._parseG711AudioData(arrayBuffer, dataOffset + 1, dataSize - 1, soundFormat === 7);
+            let dts = this._timestampBase + tagTimestamp;
+            let g711Sample = {unit: data, length: data.byteLength, dts: dts, pts: dts};
+            track.samples.push(g711Sample);
+            track.length += data.length;
         }
+    }
+
+    // Expands G.711 samples into little-endian 16-bit signed linear PCM
+    _parseG711AudioData(arrayBuffer, dataOffset, dataSize, isALaw) {
+        let table = isALaw ? G711AlawTable : G711UlawTable;
+        let input = new Uint8Array(arrayBuffer, dataOffset, dataSize);
+        let output = new Uint8Array(dataSize * 2);
+
+        for (let i = 0; i < dataSize; i++) {
+            let sample = table[input[i]];
+            output[i * 2] = sample & 0xFF;
+            output[i * 2 + 1] = (sample >>> 8) & 0xFF;
+        }
+
+        return output;
     }
 
     _parseAACAudioData(arrayBuffer, dataOffset, dataSize) {

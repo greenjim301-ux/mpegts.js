@@ -94,6 +94,7 @@ declare class FLVDemuxer {
         filepositions: any[];
     };
     _parseAudioData(arrayBuffer: any, dataOffset: any, dataSize: any, tagTimestamp: any): void;
+    _parseG711AudioData(arrayBuffer: any, dataOffset: any, dataSize: any, isALaw: any): Uint8Array<ArrayBuffer>;
     _parseAACAudioData(arrayBuffer: any, dataOffset: any, dataSize: any): {
         packetType: number;
         data: Uint8Array<any> | {
